@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/map"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MapFragmentActivity">
+
+<!--    <FrameLayout-->
+<!--        android:id="@+id/frame"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        >-->
+
+<!--        <fragment-->
+<!--            android:id="@+id/fragment"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:name="com.naver.maps.map.MapFragment"-->
+<!--            app:navermap_zoom="10"-->
+<!--            />-->
+<!--    </FrameLayout>-->
+
+
+    <fragment
+        android:id="@+id/fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:name="com.naver.maps.map.MapFragment"
+        app:navermap_zoom="10"
+        />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_baseline_arrow_right_alt_24"
+        android:background="@drawable/button_bg"
+        android:layout_alignParentRight="true"
+        android:layout_margin="10dp"
+        android:onClick="move"
+        />
+
+    <TextView
+        android:id="@+id/tv_lati"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="test"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:padding="10dp"
+        />
+
+
+</RelativeLayout>
