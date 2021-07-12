@@ -359,8 +359,10 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
     }
 
     class Task extends AsyncTask<Void, Integer, String> {
-        String gasan = "126.878202, 37.482762";
-        String seongnam = "127.128355, 37.446311";
+        String gasan = "126.878202,37.482762";
+        String seongnam = "127.128355,37.446311";
+        String bugae = "126.740801,37.488466";
+        String opt = "traavoidtoll:traavoidcaronly";
 
         StringBuffer response;
 
@@ -369,7 +371,7 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
             try {
                 String start = URLEncoder.encode(gasan,"UTF-8");
                 String goal = URLEncoder.encode(seongnam,"UTF-8");
-                String appDirectionUrl = "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start="+start+"&goal="+goal;
+                String appDirectionUrl = "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start="+bugae+"&goal="+gasan+"&option="+opt;
                 URL url = new URL(appDirectionUrl);
                 HttpsURLConnection urlConn = (HttpsURLConnection) url.openConnection();
 
@@ -405,7 +407,7 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
             try {
                 JSONObject jsonObject = new JSONObject(result);
                 JSONObject json_route = jsonObject.getJSONObject("route");
-                JSONArray jsonArray_trafast = json_route.getJSONArray("traoptimal");
+                JSONArray jsonArray_trafast = json_route.getJSONArray("traavoidtoll");
                 JSONObject JSONObject_sub = jsonArray_trafast.getJSONObject(0);
                 JSONArray jsonArray_path = JSONObject_sub.getJSONArray("path");
 
