@@ -68,6 +68,8 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
     private String str;
     private TextView tv;
 
+    Marker mMarker;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -153,15 +155,44 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
 
         // 센터 마커
         Marker marker1 = new Marker();
-        naver_m.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
-            @Override
-            public void onCameraChange(int i, boolean b) {
-                CameraPosition cameraPosition = naverMap.getCameraPosition();
+//        naver_m.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
+//            @Override
+//            public void onCameraChange(int i, boolean b) {
+//                CameraPosition cameraPosition = naverMap.getCameraPosition();
+//
+//                marker1.setPosition(new LatLng(cameraPosition.target.latitude, cameraPosition.target.longitude));
+//                marker1.setIconTintColor(Color.argb(255,0,0,0));
+//                marker1.setMap(naverMap);
+//                tv.setText("위도 : "+cameraPosition.target.latitude+"\n경도 : "+cameraPosition.target.longitude);
+//            }
+//        });
 
-                marker1.setPosition(new LatLng(cameraPosition.target.latitude, cameraPosition.target.longitude));
-                marker1.setIconTintColor(Color.argb(255,0,0,0));
-                marker1.setMap(naverMap);
-                tv.setText("위도 : "+cameraPosition.target.latitude+"\n경도 : "+cameraPosition.target.longitude);
+
+        InfoWindow neviInfo = new InfoWindow();
+        neviInfo.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
+            @NonNull
+            @Override
+            public CharSequence getText(@NonNull InfoWindow infoWindow) {
+                return "정보 창 내용";
+
+                // todo : 정보창 마커위에 띄우고 정보창 클릭시 길찾기 시작 하도록 할것
+            }
+        });
+
+        naver_m.setOnMapClickListener(new NaverMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
+                tv.setText("위도 : "+latLng.latitude+"\n경도 : "+latLng.longitude);
+
+                if (mMarker == null) {
+                    mMarker = new Marker();
+                    mMarker.setPosition(new LatLng(latLng.latitude, latLng.longitude));
+                    mMarker.setMap(naver_m);
+                } else {
+                    mMarker.setMap(null);
+                    mMarker = null;
+                }
+
             }
         });
 
@@ -175,6 +206,8 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
 
         // 지도가 특정 범위를 넘어가지 않도록 설정
         naver_m.setExtent(bounds);
+
+//        naver_m.addOnLocationChangeListener();
 
         // 폴리오버레이 범위를 엄청 크게 지정 한다음 내부홀을 지정하여 투명도를 설정한다.(내부홀은 스타일 효과가 무효화 된다, 내부홀만 선명하게 보이고 바깥 부분은 회색으로 보인다.)
         PolygonOverlay polygonOverlay = new PolygonOverlay();

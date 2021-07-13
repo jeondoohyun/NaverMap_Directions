@@ -46,7 +46,6 @@
         android:id="@+id/tv_lati"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="test"
         android:textSize="18sp"
         android:textColor="@color/black"
         android:padding="10dp"
