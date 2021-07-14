@@ -5,7 +5,6 @@ import android.graphics.PointF;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -13,29 +12,23 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 
 import com.bnctech.testmap.hmacsha256.Hmac;
-import com.google.android.gms.tasks.Task;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.geometry.LatLngBounds;
 import com.naver.maps.map.CameraAnimation;
-import com.naver.maps.map.CameraPosition;
 import com.naver.maps.map.CameraUpdate;
 import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
 import com.naver.maps.map.NaverMap;
-import com.naver.maps.map.NaverMapOptions;
 import com.naver.maps.map.OnMapReadyCallback;
 import com.naver.maps.map.UiSettings;
 import com.naver.maps.map.overlay.InfoWindow;
-import com.naver.maps.map.overlay.LocationOverlay;
 import com.naver.maps.map.overlay.Marker;
 import com.naver.maps.map.overlay.Overlay;
-import com.naver.maps.map.overlay.OverlayImage;
 import com.naver.maps.map.overlay.PathOverlay;
 import com.naver.maps.map.overlay.PolygonOverlay;
 import com.naver.maps.map.util.FusedLocationSource;
@@ -58,8 +51,6 @@ import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
-
 public class MapFragmentActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private NaverMap naver_m;
@@ -69,6 +60,13 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
     private TextView tv;
 
     Marker mMarker;
+
+    private double my_lati;
+    private double my_long;
+    private double des_lati;
+    private double des_long;
+
+    PathOverlay path;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -168,33 +166,72 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
 //        });
 
 
-        InfoWindow neviInfo = new InfoWindow();
-        neviInfo.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
+        InfoWindow naviInfo = new InfoWindow();
+        naviInfo.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
             @NonNull
             @Override
             public CharSequence getText(@NonNull InfoWindow infoWindow) {
-                return "정보 창 내용";
+                return "이 위치로\n길찾기 시작";
 
                 // todo : 정보창 마커위에 띄우고 정보창 클릭시 길찾기 시작 하도록 할것
+            }
+        });
+        
+        naviInfo.setOnClickListener(new Overlay.OnClickListener() {
+            @Override
+            public boolean onClick(@NonNull Overlay overlay) {
+//                Toast.makeText(MapFragmentActivity.this, "클릭", Toast.LENGTH_SHORT).show();
+                if (path != null) {
+                    path.setMap(null);
+                }
+                new NaverNaviApi().execute();
+                return false;
+            }
+        });
+
+        naver_m.addOnLocationChangeListener(new NaverMap.OnLocationChangeListener() {
+            @Override
+            public void onLocationChange(@NonNull Location location) {
+                tv.setText("위도 : "+location.getLatitude()+"\n경도 : "+location.getLongitude());
+                my_lati = location.getLatitude();
+                my_long = location.getLongitude();
             }
         });
 
         naver_m.setOnMapClickListener(new NaverMap.OnMapClickListener() {
             @Override
             public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
-                tv.setText("위도 : "+latLng.latitude+"\n경도 : "+latLng.longitude);
+//                tv.setText("위도 : "+latLng.latitude+"\n경도 : "+latLng.longitude);
 
                 if (mMarker == null) {
                     mMarker = new Marker();
                     mMarker.setPosition(new LatLng(latLng.latitude, latLng.longitude));
                     mMarker.setMap(naver_m);
+                    naviInfo.open(mMarker);
+                    des_lati = latLng.latitude;
+                    des_long = latLng.longitude;
                 } else {
+                    naviInfo.close();
                     mMarker.setMap(null);
                     mMarker = null;
                 }
 
             }
         });
+
+//        Overlay.OnClickListener listener = overlay -> {
+//            Marker marker = (Marker)overlay;
+//
+//            if (marker.getInfoWindow() == null) {
+//                // 현재 마커에 정보 창이 열려있지 않을 경우 엶
+//                infoWindow.open(marker);
+//            } else {
+//                // 이미 현재 마커에 정보 창이 열려있을 경우 닫음
+//                infoWindow.close();
+//            }
+//
+//            return true;
+//        };
 
 
         LatLngBounds bounds = new LatLngBounds.Builder()
@@ -230,7 +267,7 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
         polygonOverlay.setOutlineColor(Color.BLACK);
         polygonOverlay.setMap(naver_m);
 
-        new Task().execute();
+//        new NaverNaviApi().execute();
 
 
         // AsyncTask를 이용한 https 통신
@@ -391,7 +428,7 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
         }.execute();
     }
 
-    class Task extends AsyncTask<Void, Integer, String> {
+    class NaverNaviApi extends AsyncTask<Void, Integer, String> {
         String gasan = "126.878202,37.482762";
         String seongnam = "127.128355,37.446311";
         String bugae = "126.740801,37.488466";
@@ -404,7 +441,8 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
             try {
                 String start = URLEncoder.encode(gasan,"UTF-8");
                 String goal = URLEncoder.encode(seongnam,"UTF-8");
-                String appDirectionUrl = "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start="+bugae+"&goal="+gasan+"&option="+opt;
+//                String appDirectionUrl = "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start="+bugae+"&goal="+gasan+"&option="+opt;
+                String appDirectionUrl = "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start="+my_long+","+my_lati+"&goal="+des_long+","+des_lati+"&option="+opt;
                 URL url = new URL(appDirectionUrl);
                 HttpsURLConnection urlConn = (HttpsURLConnection) url.openConnection();
 
@@ -455,7 +493,7 @@ public class MapFragmentActivity extends AppCompatActivity implements OnMapReady
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        PathOverlay path = new PathOverlay();
+                        path = new PathOverlay();
                         path.setCoords(latLngs);
 //                        Log.e("latLngs 데이터",latLngs.get(0).latitude+", "+latLngs.get(0).longitude+"\n"+latLngs.get(1).latitude+", "+latLngs.get(1).longitude);
                         path.setMap(naver_m);
